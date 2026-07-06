@@ -1,0 +1,15 @@
+{
+  "project": "ADTS - AI Native Development Toolkit",
+  "started_at": "2025-01-15T08:00:00Z",
+  "duration": "6h 30m",
+  "members": 4,
+  "tasks": 12,
+  "events": 147,
+  "commits": 38,
+  "providers": {
+    "OpenAI": 82,
+    "Claude": 41,
+    "Gemini": 16,
+    "OpenRouter": 8
+  }
+}

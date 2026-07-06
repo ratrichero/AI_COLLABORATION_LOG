@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Minh",
+    "role": "Tech Lead",
+    "avatar": "M",
+    "events": 42,
+    "tasks": 4,
+    "commits": 12,
+    "providers": {
+      "OpenAI": 36,
+      "Claude": 4,
+      "Gemini": 2
+    },
+    "phases": {
+      "Architecture": 8,
+      "Implementation": 28,
+      "Testing": 4,
+      "Documentation": 2
+    },
+    "activity": [
+      { "date": "2025-01-10", "events": 5 },
+      { "date": "2025-01-11", "events": 8 },
+      { "date": "2025-01-12", "events": 6 },
+      { "date": "2025-01-13", "events": 10 },
+      { "date": "2025-01-14", "events": 7 },
+      { "date": "2025-01-15", "events": 6 }
+    ]
+  },
+  {
+    "name": "Linh",
+    "role": "Backend Developer",
+    "avatar": "L",
+    "events": 38,
+    "tasks": 4,
+    "commits": 10,
+    "providers": {
+      "Claude": 28,
+      "OpenAI": 8,
+      "Gemini": 2
+    },
+    "phases": {
+      "Architecture": 4,
+      "Implementation": 24,
+      "Testing": 6,
+      "Documentation": 4
+    },
+    "activity": [
+      { "date": "2025-01-10", "events": 4 },
+      { "date": "2025-01-11", "events": 6 },
+      { "date": "2025-01-12", "events": 8 },
+      { "date": "2025-01-13", "events": 7 },
+      { "date": "2025-01-14", "events": 9 },
+      { "date": "2025-01-15", "events": 4 }
+    ]
+  },
+  {
+    "name": "Duc",
+    "role": "Frontend Developer",
+    "avatar": "D",
+    "events": 35,
+    "tasks": 4,
+    "commits": 9,
+    "providers": {
+      "OpenAI": 22,
+      "OpenRouter": 8,
+      "Claude": 5
+    },
+    "phases": {
+      "Architecture": 6,
+      "Implementation": 22,
+      "Testing": 4,
+      "Documentation": 3
+    },
+    "activity": [
+      { "date": "2025-01-10", "events": 3 },
+      { "date": "2025-01-11", "events": 5 },
+      { "date": "2025-01-12", "events": 7 },
+      { "date": "2025-01-13", "events": 8 },
+      { "date": "2025-01-14", "events": 6 },
+      { "date": "2025-01-15", "events": 6 }
+    ]
+  },
+  {
+    "name": "Hoa",
+    "role": "QA Engineer",
+    "avatar": "H",
+    "events": 32,
+    "tasks": 3,
+    "commits": 7,
+    "providers": {
+      "Gemini": 12,
+      "Claude": 12,
+      "OpenAI": 8
+    },
+    "phases": {
+      "Architecture": 2,
+      "Implementation": 18,
+      "Testing": 8,
+      "Documentation": 4
+    },
+    "activity": [
+      { "date": "2025-01-10", "events": 2 },
+      { "date": "2025-01-11", "events": 4 },
+      { "date": "2025-01-12", "events": 6 },
+      { "date": "2025-01-13", "events": 8 },
+      { "date": "2025-01-14", "events": 7 },
+      { "date": "2025-01-15", "events": 5 }
+    ]
+  }
+]

@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* Map semantic tokens -> Tailwind utilities (runtime-swappable via CSS vars) */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-panel: var(--panel);
+  --color-elevated: var(--elevated);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-solid-hover: var(--accent-solid-hover);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-code);
+}
+
+/* ===== Light (default) ===== */
+:root {
+  --font-ui: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-code: 'JetBrains Mono', ui-monospace, 'Fira Code', monospace;
+
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --panel: #f1f5f9;
+  --elevated: #f8fafc;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --ink: #0f172a;
+  --muted: #475569;
+  --faint: #94a3b8;
+
+  --accent: #7c3aed;
+  --accent-2: #4f46e5;
+  --accent-soft: #f5f3ff;
+  --accent-solid: #6d28d9;
+  --accent-solid-hover: #5b21b6;
+
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #2563eb;
+
+  --grid: transparent;
+}
+
+/* ===== Dev (terminal / IDE) ===== */
+[data-theme="dev"] {
+  --font-ui: 'JetBrains Mono', ui-monospace, 'Fira Code', monospace;
+
+  --bg: #0d1117;
+  --surface: #161b22;
+  --panel: #0d1117;
+  --elevated: #21262d;
+  --line: #30363d;
+  --line-strong: #484f58;
+  --ink: #e6edf3;
+  --muted: #9198a1;
+  --faint: #6e7681;
+
+  --accent: #3fb950;
+  --accent-2: #1f6feb;
+  --accent-soft: rgba(63, 185, 80, 0.12);
+  --accent-solid: #238636;
+  --accent-solid-hover: #2ea043;
+
+  --success: #3fb950;
+  --warning: #d29922;
+  --danger: #f85149;
+  --info: #58a6ff;
+
+  --grid: rgba(110, 118, 129, 0.09);
+}
+
+/* ===== Base ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background-color: var(--bg);
+}
+
+/* Light: soft violet/indigo glow. Dev: terminal grid. */
+[data-theme="light"] body {
+  background-image:
+    radial-gradient(55rem 55rem at -10% -15%, #f3f0ff 0%, transparent 45%),
+    radial-gradient(45rem 45rem at 110% -10%, #eef2ff 0%, transparent 45%);
+  background-attachment: fixed;
+}
+
+[data-theme="dev"] body {
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  background-attachment: fixed;
+}
+
+/* Subtle neon glow on accent text in dev mode */
+[data-theme="dev"] .text-accent {
+  text-shadow: 0 0 14px rgba(63, 185, 80, 0.35);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--faint);
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Blinking terminal cursor for the logo in dev mode */
+@keyframes cursor-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.dev-cursor {
+  animation: cursor-blink 1.1s step-end infinite;
+}

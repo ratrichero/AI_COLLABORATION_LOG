@@ -1,0 +1,130 @@
+[
+  {
+    "time": "2025-01-15T09:00:00Z",
+    "type": "decision",
+    "member": "Minh",
+    "task": "CORE-001",
+    "title": "Quyet dinh su dung Pipeline Architecture voi 8 steps",
+    "commit": null
+  },
+  {
+    "time": "2025-01-15T09:15:00Z",
+    "type": "prompt",
+    "member": "Minh",
+    "task": "CORE-001",
+    "title": "Implement PipelineContext voi Pydantic BaseModel",
+    "commit": "a1b2c3d"
+  },
+  {
+    "time": "2025-01-15T09:35:00Z",
+    "type": "prompt",
+    "member": "Linh",
+    "task": "CLI-001",
+    "title": "Implement CLI command handler voi Typer",
+    "commit": "e4f5g6h"
+  },
+  {
+    "time": "2025-01-15T10:00:00Z",
+    "type": "decision",
+    "member": "Duc",
+    "task": "FE-001",
+    "title": "Chon React + Vite + TailwindCSS cho Dashboard",
+    "commit": null
+  },
+  {
+    "time": "2025-01-15T10:20:00Z",
+    "type": "prompt",
+    "member": "Hoa",
+    "task": "CORE-002",
+    "title": "Implement Prompt Compiler - ghep System + Project + Developer prompt",
+    "commit": "i7j8k9l"
+  },
+  {
+    "time": "2025-01-15T10:45:00Z",
+    "type": "commit",
+    "member": "Minh",
+    "task": "CORE-003",
+    "title": "Hoan thanh AI Provider Adapter cho OpenAI",
+    "commit": "m0n1o2p"
+  },
+  {
+    "time": "2025-01-15T11:00:00Z",
+    "type": "prompt",
+    "member": "Linh",
+    "task": "CORE-004",
+    "title": "Implement Metadata Extractor - parse =====ADTS===== block",
+    "commit": "q3r4s5t"
+  },
+  {
+    "time": "2025-01-15T11:30:00Z",
+    "type": "prompt",
+    "member": "Duc",
+    "task": "FE-002",
+    "title": "Implement Overview Dashboard voi Recharts",
+    "commit": "u6v7w8x"
+  },
+  {
+    "time": "2025-01-15T11:50:00Z",
+    "type": "commit",
+    "member": "Hoa",
+    "task": "CORE-005",
+    "title": "Event Writer - luu event duoi dang JSON",
+    "commit": "y9z0a1b"
+  },
+  {
+    "time": "2025-01-15T12:10:00Z",
+    "type": "decision",
+    "member": "Minh",
+    "task": "CORE-006",
+    "title": "Thiet ke incremental cache build strategy",
+    "commit": null
+  },
+  {
+    "time": "2025-01-15T12:40:00Z",
+    "type": "prompt",
+    "member": "Linh",
+    "task": "CLI-002",
+    "title": "Implement adts init - tao .adts/ structure",
+    "commit": "c2d3e4f"
+  },
+  {
+    "time": "2025-01-15T13:00:00Z",
+    "type": "prompt",
+    "member": "Duc",
+    "task": "FE-003",
+    "title": "Implement Timeline View voi vertical layout",
+    "commit": "g5h6i7j"
+  },
+  {
+    "time": "2025-01-15T13:25:00Z",
+    "type": "prompt",
+    "member": "Hoa",
+    "task": "CORE-007",
+    "title": "Viet unit test cho Pipeline steps - target 90% coverage",
+    "commit": "k8l9m0n"
+  },
+  {
+    "time": "2025-01-15T13:50:00Z",
+    "type": "commit",
+    "member": "Minh",
+    "task": "CORE-008",
+    "title": "Git Hook auto update event sau commit",
+    "commit": "o1p2q3r"
+  },
+  {
+    "time": "2025-01-15T14:10:00Z",
+    "type": "prompt",
+    "member": "Linh",
+    "task": "CORE-009",
+    "title": "Implement Report Generator - sinh AI-COLLABORATION.md",
+    "commit": "s4t5u6v"
+  },
+  {
+    "time": "2025-01-15T14:30:00Z",
+    "type": "prompt",
+    "member": "Duc",
+    "task": "FE-004",
+    "title": "Implement Developer Activity view voi comparison charts",
+    "commit": "w7x8y9z"
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "CORE-001",
+    "title": "Pipeline Architecture",
+    "status": "Done",
+    "phase": "Architecture",
+    "assignee": "Minh",
+    "events": 12,
+    "commits": 3,
+    "summary": "Thiet ke va implement Pipeline Architecture voi 8 steps theo Single Responsibility principle. Su dung PipelineContext lam carrier object duy nhat."
+  },
+  {
+    "id": "CLI-001",
+    "title": "CLI Command Handler",
+    "status": "Done",
+    "phase": "Implementation",
+    "assignee": "Linh",
+    "events": 8,
+    "commits": 2,
+    "summary": "Implement CLI interface su dung Typer voi cac sub-commands: init, task, ask, summarize, report, dashboard."
+  },
+  {
+    "id": "FE-001",
+    "title": "Dashboard Architecture",
+    "status": "Done",
+    "phase": "Architecture",
+    "assignee": "Duc",
+    "events": 6,
+    "commits": 2,
+    "summary": "Thiet ke component structure cho Dashboard: Overview, Timeline, Task Explorer, Developer Activity, Report."
+  },
+  {
+    "id": "CORE-002",
+    "title": "Prompt Compiler",
+    "status": "Done",
+    "phase": "Implementation",
+    "assignee": "Hoa",
+    "events": 10,
+    "commits": 3,
+    "summary": "Implement Prompt Compiler tu dong ghep: System Prompt + Project Context + Architecture + Coding + Task + Developer Prompt."
+  },
+  {
+    "id": "CORE-003",
+    "title": "AI Provider Adapter",
+    "status": "Done",
+    "phase": "Implementation",
+    "assignee": "Minh",
+    "events": 14,
+    "commits": 4,
+    "summary": "Implement AI Provider interface va adapter cho OpenAI, Claude. Su dung httpx async client."
+  },
+  {
+    "id": "CORE-004",
+    "title": "Metadata Extractor",
+    "status": "Done",
+    "phase": "Implementation",
+    "assignee": "Linh",
+    "events": 5,
+    "commits": 2,
+    "summary": "Parse Metadata block tu AI response (=====ADTS===== ... =====END=====), fallback to default neu khong co."
+  },
+  {
+    "id": "FE-002",
+    "title": "Overview Dashboard",
+    "status": "Done",
+    "phase": "Implementation",
+    "assignee": "Duc",
+    "events": 9,
+    "commits": 3,
+    "summary": "Implement Overview page: stat cards, phase distribution chart, provider usage chart."
+  },
+  {
+    "id": "CORE-005",
+    "title": "Event Writer",
+    "status": "Done",
+    "phase": "Implementation",
+    "assignee": "Hoa",
+    "events": 7,
+    "commits": 2,
+    "summary": "Implement Event Writer luu moi event thanh file JSON rieng trong .adts/events/."
+  },
+  {
+    "id": "CORE-006",
+    "title": "Cache Builder",
+    "status": "Done",
+    "phase": "Implementation",
+    "assignee": "Minh",
+    "events": 11,
+    "commits": 4,
+    "summary": "Implement Cache Builder build incremental: overview.json, timeline.json, tasks.json, developers.json."
+  },
+  {
+    "id": "CLI-002",
+    "title": "CLI Init Command",
+    "status": "Done",
+    "phase": "Implementation",
+    "assignee": "Linh",
+    "events": 4,
+    "commits": 1,
+    "summary": "Implement adts init: tao .adts/ directory structure va config.yaml template."
+  },
+  {
+    "id": "FE-003",
+    "title": "Timeline View",
+    "status": "In Progress",
+    "phase": "Implementation",
+    "assignee": "Duc",
+    "events": 8,
+    "commits": 2,
+    "summary": "Implement Timeline vertical layout hien thi events theo thoi gian."
+  },
+  {
+    "id": "CORE-007",
+    "title": "Pipeline Unit Tests",
+    "status": "In Progress",
+    "phase": "Testing",
+    "assignee": "Hoa",
+    "events": 6,
+    "commits": 2,
+    "summary": "Viet unit test cho tung Pipeline step, mock AI provider, target coverage 90%."
+  }
+]
