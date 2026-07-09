@@ -18,6 +18,7 @@ import type { Report } from "../types";
 
 interface ReportPageProps {
   data: Report;
+  onExportMarkdown?: () => void;
 }
 
 /** Format acceptance_rate: if <= 1 treat as decimal (multiply by 100), else use as-is */
@@ -46,7 +47,7 @@ function Section({
   );
 }
 
-export default function ReportPage({ data }: ReportPageProps) {
+export default function ReportPage({ data, onExportMarkdown }: ReportPageProps) {
   const totalProviderEvents = Object.values(data.summary.providers).reduce((a, b) => a + b, 0);
 
   return (
@@ -59,7 +60,10 @@ export default function ReportPage({ data }: ReportPageProps) {
             Auto-generated • {data.project.name}
           </p>
         </div>
-        <button className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent-solid px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-accent/25 transition-all hover:bg-accent-solid-hover sm:w-auto">
+        <button
+          onClick={onExportMarkdown}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent-solid px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-accent/25 transition-all hover:bg-accent-solid-hover sm:w-auto"
+        >
           <Download size={16} />
           Export MD
         </button>

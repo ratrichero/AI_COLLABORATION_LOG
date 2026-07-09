@@ -77,45 +77,56 @@ export function useLogIngestion(): UseLogIngestionReturn {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Process loaded files and update state
+   * Process files and update state.
+   * mode = "accumulate" → merge with existing files (for file uploads)
+   * mode = "replace"    → discard existing, use only new files (for github/paste)
    */
   const processFiles = useCallback((
     newFiles: ParsedLogFile[],
-    sources: DataSource[]
+    sources: DataSource[],
+    mode: "accumulate" | "replace"
   ) => {
-    // Merge with existing files
-    const allFiles = [...ingestion.files, ...newFiles];
-    
-    // Merge all entries
-    const mergeResult = mergeLogFiles(allFiles);
-    
-    // Validate
-    const validationResult = validateEntries(mergeResult.entries);
-    
-    // Transform to dashboard data
-    const transformed = transformLogEntries(mergeResult.entries);
+    setIngestion(prev => {
+      const allFiles = mode === "accumulate"
+        ? [...prev.files, ...newFiles]
+        : newFiles;
 
-    // Calculate totals
-    const totalErrors = allFiles.reduce((sum, f) => sum + f.parseErrors.length, 0);
+      const allSources = mode === "accumulate"
+        ? [...prev.sources, ...sources]
+        : sources;
 
-    // Update state
-    setIngestion({
-      files: allFiles,
-      allEntries: mergeResult.entries,
-      totalFiles: allFiles.length,
-      totalEntries: mergeResult.entries.length,
-      totalErrors,
-      loadedAt: new Date().toISOString(),
-      sources: [...ingestion.sources, ...sources],
+      // Merge all entries
+      const mergeResult = mergeLogFiles(allFiles);
+
+      // Validate
+      const validationResult = validateEntries(mergeResult.entries);
+
+      // Transform to dashboard data
+      const transformed = transformLogEntries(mergeResult.entries);
+
+      // Calculate totals
+      const totalErrors = allFiles.reduce((sum, f) => sum + f.parseErrors.length, 0);
+
+      // Side-effect updates (ok inside setState updater for derived state)
+      setValidation(validationResult);
+      setProcessedData(transformed);
+      setError(null);
+
+      return {
+        files: allFiles,
+        allEntries: mergeResult.entries,
+        totalFiles: allFiles.length,
+        totalEntries: mergeResult.entries.length,
+        totalErrors,
+        loadedAt: new Date().toISOString(),
+        sources: allSources,
+      };
     });
-
-    setValidation(validationResult);
-    setProcessedData(transformed);
-    setError(null);
-  }, [ingestion.files, ingestion.sources]);
+  }, []);
 
   /**
    * Load files from File objects (drag & drop / file picker)
+   * → ACCUMULATE with existing data
    */
   const loadFiles = useCallback(async (files: File[]) => {
     setLoading(true);
@@ -127,7 +138,7 @@ export function useLogIngestion(): UseLogIngestionReturn {
 
       for (const file of files) {
         if (!file.name.endsWith(".jsonl") && !file.name.endsWith(".json")) {
-          continue; // Skip non-JSON files
+          continue;
         }
 
         const content = await readFileAsText(file);
@@ -146,7 +157,7 @@ export function useLogIngestion(): UseLogIngestionReturn {
         throw new Error("No valid .jsonl or .json files found");
       }
 
-      processFiles(parsedFiles, sources);
+      processFiles(parsedFiles, sources, "accumulate");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load files");
     } finally {
@@ -156,6 +167,7 @@ export function useLogIngestion(): UseLogIngestionReturn {
 
   /**
    * Load from GitHub repository
+   * → REPLACE existing data (fresh dataset)
    */
   const loadFromGitHub = useCallback(async (
     repoUrl: string,
@@ -172,10 +184,10 @@ export function useLogIngestion(): UseLogIngestionReturn {
       }
 
       const { owner, repo } = parsed;
-      
+
       // Fetch directory listing
       const files = await fetchGitHubDirectory(owner, repo, path, branch);
-      
+
       // Filter for JSONL files
       const jsonlFiles = files.filter(
         f => f.type === "file" && (f.name.endsWith(".jsonl") || f.name.endsWith(".json"))
@@ -184,7 +196,7 @@ export function useLogIngestion(): UseLogIngestionReturn {
       if (jsonlFiles.length === 0) {
         // Try to find subdirectories (evidence/author/log.jsonl pattern)
         const dirs = files.filter(f => f.type === "dir");
-        
+
         for (const dir of dirs) {
           const subFiles = await fetchGitHubDirectory(owner, repo, dir.path, branch);
           const subJsonl = subFiles.filter(
@@ -220,7 +232,7 @@ export function useLogIngestion(): UseLogIngestionReturn {
         throw new Error("Failed to load any files from GitHub");
       }
 
-      processFiles(parsedFiles, sources);
+      processFiles(parsedFiles, sources, "replace");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load from GitHub");
     } finally {
@@ -230,6 +242,7 @@ export function useLogIngestion(): UseLogIngestionReturn {
 
   /**
    * Load from pasted content
+   * → REPLACE existing data (fresh dataset)
    */
   const loadFromPaste = useCallback((content: string, label: string = "pasted-content") => {
     setLoading(true);
@@ -237,7 +250,7 @@ export function useLogIngestion(): UseLogIngestionReturn {
 
     try {
       const parsed = parseJsonlContent(content, label);
-      
+
       if (parsed.entries.length === 0 && parsed.parseErrors.length > 0) {
         throw new Error(`Parse errors: ${parsed.parseErrors[0].error}`);
       }
@@ -253,7 +266,7 @@ export function useLogIngestion(): UseLogIngestionReturn {
         loadedAt: new Date().toISOString(),
       }];
 
-      processFiles([parsed], sources);
+      processFiles([parsed], sources, "replace");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to parse pasted content");
     } finally {

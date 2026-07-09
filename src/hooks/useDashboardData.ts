@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Overview, TimelineEvent, Task, Developer, Report, DashboardData } from "../types";
 import type { IngestionState, ValidationResult, ExportFormat } from "../types/log-entry";
 import { useLogIngestion } from "./useLogIngestion";
+import { exportReportAsMarkdown } from "../processing/exporter";
 
 export interface UseDashboardDataReturn {
   // Core data
@@ -27,6 +28,7 @@ export interface UseDashboardDataReturn {
   loadFromPaste: (content: string) => void;
   clearAll: () => void;
   exportData: (format: ExportFormat) => void;
+  exportReportMarkdown: () => void;
 }
 
 async function fetchJson<T>(url: string): Promise<T | null> {
@@ -63,7 +65,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     loadFromPaste,
     clearAll: clearImported,
     exportJsonl,
-    exportMarkdown,
+    exportMarkdown: exportIngestionMarkdown,
     exportDashboardJson,
     exportAll,
   } = useLogIngestion();
@@ -93,14 +95,9 @@ export function useDashboardData(): UseDashboardDataReturn {
         });
         setDataSource("static");
       } else {
-        // No static files found — this is normal when deployed as
-        // a single-file build (e.g. Vercel). Silently fall through
-        // to the Import page without showing an error.
         setDataSource("none");
       }
     } catch {
-      // Network error while probing for static files.
-      // Treat identically to "no files found".
       setDataSource("none");
     } finally {
       setStaticLoading(false);
@@ -138,12 +135,10 @@ export function useDashboardData(): UseDashboardDataReturn {
   const data = getActiveData();
   const hasData = data.overview !== null;
   const loading = staticLoading || importLoading;
-  // Only show errors from import operations. Static 404s are silently
-  // handled by falling through to the Import page.
   const error = importError;
 
   /**
-   * Clear all data and reset to initial state
+   * Clear all imported data and fall back to static if available
    */
   const clearAll = useCallback(() => {
     clearImported();
@@ -159,7 +154,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         exportJsonl();
         break;
       case "markdown":
-        exportMarkdown();
+        exportIngestionMarkdown();
         break;
       case "json-bundle":
         exportDashboardJson();
@@ -168,7 +163,26 @@ export function useDashboardData(): UseDashboardDataReturn {
         exportAll();
         break;
     }
-  }, [exportJsonl, exportMarkdown, exportDashboardJson, exportAll]);
+  }, [exportJsonl, exportIngestionMarkdown, exportDashboardJson, exportAll]);
+
+  /**
+   * Export the current Report as Markdown.
+   * Works for both imported data (via ingestion) and static data.
+   */
+  const exportReportMarkdown = useCallback(() => {
+    // Prefer the ingestion-level exporter if we have raw entries
+    // (it produces a richer markdown with the full timeline table)
+    if (dataSource === "imported" && ingestion.allEntries.length > 0 && processedData) {
+      exportIngestionMarkdown();
+      return;
+    }
+
+    // Fallback: export from the Report object directly (static mode)
+    const report = data.report;
+    if (report) {
+      exportReportAsMarkdown(report);
+    }
+  }, [dataSource, ingestion.allEntries, processedData, exportIngestionMarkdown, data.report]);
 
   return {
     data,
@@ -184,5 +198,6 @@ export function useDashboardData(): UseDashboardDataReturn {
     loadFromPaste,
     clearAll,
     exportData,
+    exportReportMarkdown,
   };
 }

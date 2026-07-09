@@ -31,6 +31,7 @@ function Dashboard() {
     loadFromPaste,
     clearAll,
     exportData,
+    exportReportMarkdown,
   } = useDashboardData();
 
   // Auto-redirect based on data availability
@@ -116,7 +117,7 @@ function Dashboard() {
         return <Developers data={data.developers} />;
       case "report":
         return data.report ? (
-          <Report data={data.report} />
+          <Report data={data.report} onExportMarkdown={exportReportMarkdown} />
         ) : (
           <div className="flex h-[60vh] items-center justify-center px-4">
             <div className="max-w-md rounded-2xl border border-line bg-surface p-6 text-center sm:p-8">
