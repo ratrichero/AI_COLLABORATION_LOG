@@ -177,12 +177,12 @@ export function useDashboardData(): UseDashboardDataReturn {
       return;
     }
 
-    // Fallback: export from the Report object directly (static mode)
+    // Fallback: export from dashboard data (static mode or any mode)
     const report = data.report;
     if (report) {
-      exportReportAsMarkdown(report);
+      exportReportAsMarkdown(report, data.timeline, data.tasks, data.developers);
     }
-  }, [dataSource, ingestion.allEntries, processedData, exportIngestionMarkdown, data.report]);
+  }, [dataSource, ingestion.allEntries, processedData, exportIngestionMarkdown, data.report, data.timeline, data.tasks, data.developers]);
 
   return {
     data,

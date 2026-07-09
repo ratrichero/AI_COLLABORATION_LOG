@@ -417,12 +417,20 @@ export function exportFullEvidence(
 }
 
 // ============================================================
-//  Export Report as Markdown (static data mode — no raw entries)
+//  Export Report as Markdown (static / any data mode)
+//  Accepts full dashboard data so we can always build
+//  a comprehensive report with evidence appendix.
 // ============================================================
 
-export function exportReportAsMarkdown(report: Report): void {
+export function exportReportAsMarkdown(
+  report: Report,
+  timeline: TimelineEvent[],
+  tasks: Task[],
+  developers: Developer[]
+): void {
   const lines: string[] = [];
 
+  // ── Header ──
   lines.push("# AI Collaboration Log");
   lines.push("");
   lines.push(`> **Project:** ${report.project.name}`);
@@ -431,7 +439,7 @@ export function exportReportAsMarkdown(report: Report): void {
   lines.push(`> **Generated:** ${new Date(report.project.generated_at).toLocaleString("vi-VN")}`);
   lines.push("");
 
-  // Summary
+  // ── Summary ──
   lines.push("## Summary");
   lines.push("");
   lines.push(`- **Total Events:** ${report.summary.events}`);
@@ -445,7 +453,7 @@ export function exportReportAsMarkdown(report: Report): void {
   }
   lines.push("");
 
-  // Phases
+  // ── Phases ──
   lines.push("## Development Phases");
   lines.push("");
   lines.push("| # | Phase | Events | Summary |");
@@ -456,7 +464,7 @@ export function exportReportAsMarkdown(report: Report): void {
   });
   lines.push("");
 
-  // Key Decisions
+  // ── Key Decisions ──
   lines.push("## Key Decisions");
   lines.push("");
   report.key_decisions.forEach((d, idx) => {
@@ -466,7 +474,7 @@ export function exportReportAsMarkdown(report: Report): void {
     lines.push("");
   });
 
-  // Lessons Learned
+  // ── Lessons Learned ──
   lines.push("## Lessons Learned");
   lines.push("");
   report.lessons_learned.forEach((l) => {
@@ -474,7 +482,7 @@ export function exportReportAsMarkdown(report: Report): void {
   });
   lines.push("");
 
-  // Metrics
+  // ── Metrics ──
   lines.push("## Metrics");
   lines.push("");
   lines.push(`- **Acceptance Rate:** ${fmtPct(report.metrics.acceptance_rate)}`);
@@ -484,13 +492,126 @@ export function exportReportAsMarkdown(report: Report): void {
   lines.push(`- **Unit Tests Generated:** ${report.metrics.unit_tests_generated}`);
   lines.push("");
 
-  // NOTE: In static mode we don't have raw log entries to append.
-  // The appendix is only available when data is imported from JSONL files.
+  // ── Per-Task Detail ──
+  if (tasks.length > 0) {
+    lines.push("## Per-Task Summary");
+    lines.push("");
+    lines.push("| Task ID | Title | Status | Phase | Assignee | Events | Commits |");
+    lines.push("|---------|-------|--------|-------|----------|--------|---------|");
+    for (const task of tasks) {
+      lines.push(
+        `| ${esc(task.id)} | ${esc(task.title)} | ${task.status} | ${esc(task.phase)} | ${task.assignee} | ${task.events} | ${task.commits} |`
+      );
+    }
+    lines.push("");
+
+    // Task summaries
+    for (const task of tasks) {
+      if (task.summary) {
+        lines.push(`### ${task.id} — ${task.title}`);
+        lines.push("");
+        lines.push(`- **Status:** ${task.status}`);
+        lines.push(`- **Phase:** ${task.phase}`);
+        lines.push(`- **Assignee:** ${task.assignee}`);
+        lines.push(`- **Events:** ${task.events} | **Commits:** ${task.commits}`);
+        lines.push("");
+        lines.push(task.summary);
+        lines.push("");
+      }
+    }
+  }
+
+  // ── Per-Developer Detail ──
+  if (developers.length > 0) {
+    lines.push("## Per-Developer Summary");
+    lines.push("");
+    for (const dev of developers) {
+      lines.push(`### ${dev.name} (${dev.role})`);
+      lines.push("");
+      lines.push(`- **Events:** ${dev.events}`);
+      lines.push(`- **Tasks:** ${dev.tasks}`);
+      lines.push(`- **Commits:** ${dev.commits}`);
+      lines.push("");
+
+      if (Object.keys(dev.providers).length > 0) {
+        lines.push("**Providers:**");
+        for (const [p, c] of Object.entries(dev.providers)) {
+          lines.push(`- ${p}: ${c}`);
+        }
+        lines.push("");
+      }
+
+      if (Object.keys(dev.phases).length > 0) {
+        lines.push("**Phases:**");
+        for (const [p, c] of Object.entries(dev.phases)) {
+          lines.push(`- ${p}: ${c}`);
+        }
+        lines.push("");
+      }
+    }
+  }
+
+  // ── APPENDIX: Full Evidence Timeline ──
   lines.push("---");
   lines.push("");
-  lines.push("> **Note:** Raw evidence logs are available when data is imported from JSONL files.");
-  lines.push("> Use the Import page to load .jsonl files, then export again for the full evidence appendix.");
+  lines.push("# APPENDIX — Evidence Log");
   lines.push("");
+  lines.push("> Complete chronological record of all AI collaboration events.");
+  lines.push("");
+  lines.push(`> **Total events:** ${timeline.length}`);
+  lines.push("");
+
+  if (timeline.length > 0) {
+    // Full timeline table
+    lines.push("## Full Timeline");
+    lines.push("");
+    lines.push("| # | Timestamp | Type | Member | Task | Title | Commit |");
+    lines.push("|---|-----------|------|--------|------|-------|--------|");
+
+    timeline.forEach((ev, idx) => {
+      const time = fmtTime(ev.time);
+      const title = esc(ev.title).substring(0, 70) + (ev.title.length > 70 ? "..." : "");
+      const commit = ev.commit ? `\`${ev.commit}\`` : "-";
+      lines.push(
+        `| ${idx + 1} | ${time} | ${ev.type} | ${ev.member} | ${esc(ev.task)} | ${title} | ${commit} |`
+      );
+    });
+    lines.push("");
+
+    // Group by member for detailed evidence
+    const byMember = new Map<string, TimelineEvent[]>();
+    for (const ev of timeline) {
+      const list = byMember.get(ev.member) || [];
+      list.push(ev);
+      byMember.set(ev.member, list);
+    }
+
+    const sortedMembers = Array.from(byMember.keys()).sort();
+
+    for (const member of sortedMembers) {
+      const memberEvents = byMember.get(member)!;
+
+      lines.push(`## ${member} — ${memberEvents.length} events`);
+      lines.push("");
+
+      memberEvents.forEach((ev, idx) => {
+        lines.push(`### ${idx + 1}. [${ev.type}] ${fmtTime(ev.time)}`);
+        lines.push("");
+        lines.push(`- **Task:** ${ev.task}`);
+        lines.push(`- **Type:** ${ev.type}`);
+        if (ev.commit) lines.push(`- **Commit:** \`${ev.commit}\``);
+        lines.push("");
+        lines.push(`> ${ev.title}`);
+        lines.push("");
+        lines.push("---");
+        lines.push("");
+      });
+    }
+  } else {
+    lines.push("*No timeline events available.*");
+    lines.push("");
+  }
+
   lines.push("---");
   lines.push("*Generated by ADTS Dashboard v2*");
 

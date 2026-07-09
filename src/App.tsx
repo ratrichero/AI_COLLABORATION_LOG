@@ -16,6 +16,15 @@ function Dashboard() {
   const [currentPage, setCurrentPage] = useState<PageId>("import");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Track whether user has manually navigated at least once.
+  // We only auto-redirect to overview on the very first static load,
+  // never after the user clicks a nav item.
+  const [userNavigated, setUserNavigated] = useState(false);
+
+  const handleNavigate = (page: PageId) => {
+    setUserNavigated(true);
+    setCurrentPage(page);
+  };
 
   const {
     data,
@@ -34,12 +43,12 @@ function Dashboard() {
     exportReportMarkdown,
   } = useDashboardData();
 
-  // Auto-redirect based on data availability
+  // Auto-redirect ONLY on first static load, never after user navigates
   useEffect(() => {
-    if (hasData && currentPage === "import" && dataSource === "static") {
+    if (!userNavigated && hasData && dataSource === "static" && currentPage === "import") {
       setCurrentPage("overview");
     }
-  }, [hasData, currentPage, dataSource]);
+  }, [hasData, dataSource, userNavigated, currentPage]);
 
   // Close mobile menu on page change
   useEffect(() => {
@@ -49,7 +58,7 @@ function Dashboard() {
   // Navigate to dashboard after importing
   const handleNavigateToDashboard = () => {
     if (hasData) {
-      setCurrentPage("overview");
+      handleNavigate("overview");
     }
   };
 
@@ -96,7 +105,7 @@ function Dashboard() {
               Import log files first or wait for static data to load.
             </p>
             <button
-              onClick={() => setCurrentPage("import")}
+              onClick={() => handleNavigate("import")}
               className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent-solid px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-solid-hover"
             >
               Go to Import
@@ -169,7 +178,7 @@ function Dashboard() {
           <div className="absolute left-0 top-0 h-full w-[280px]">
             <Sidebar
               currentPage={currentPage}
-              onNavigate={setCurrentPage}
+              onNavigate={handleNavigate}
               collapsed={false}
               onToggle={() => {}}
               hasData={hasData}
@@ -189,7 +198,7 @@ function Dashboard() {
       <div className="hidden lg:block">
         <Sidebar
           currentPage={currentPage}
-          onNavigate={setCurrentPage}
+          onNavigate={handleNavigate}
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           hasData={hasData}
