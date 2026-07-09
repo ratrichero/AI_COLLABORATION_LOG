@@ -1,28 +1,30 @@
 /**
  * useDashboardData Hook
- * Main data hook for Dashboard - integrates with both static files and log ingestion
+ * Main data hook — integrates static files and log ingestion.
+ * All export functions work regardless of data source.
  */
 
 import { useState, useEffect, useCallback } from "react";
 import type { Overview, TimelineEvent, Task, Developer, Report, DashboardData } from "../types";
 import type { IngestionState, ValidationResult, ExportFormat } from "../types/log-entry";
 import { useLogIngestion } from "./useLogIngestion";
-import { exportReportAsMarkdown } from "../processing/exporter";
+import {
+  exportReportAsMarkdown,
+  exportDashboardBundle,
+  exportMergedJsonl,
+  exportFullEvidence,
+} from "../processing/exporter";
+import { downloadAsFile } from "../utils/file-helpers";
 
 export interface UseDashboardDataReturn {
-  // Core data
   data: DashboardData;
   loading: boolean;
   error: string | null;
   refetch: () => void;
-
-  // New v2 additions
   hasData: boolean;
   dataSource: "static" | "imported" | "none";
   ingestion: IngestionState;
   validation: ValidationResult | null;
-
-  // Actions
   loadFiles: (files: File[]) => Promise<void>;
   loadFromGitHub: (repoUrl: string, branch: string, path: string) => Promise<void>;
   loadFromPaste: (content: string) => void;
@@ -33,11 +35,9 @@ export interface UseDashboardDataReturn {
 
 async function fetchJson<T>(url: string): Promise<T | null> {
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      return null;
-    }
-    return await response.json();
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
   } catch {
     return null;
   }
@@ -45,37 +45,21 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 
 export function useDashboardData(): UseDashboardDataReturn {
   const [staticData, setStaticData] = useState<DashboardData>({
-    overview: null,
-    timeline: [],
-    tasks: [],
-    developers: [],
-    report: null,
+    overview: null, timeline: [], tasks: [], developers: [], report: null,
   });
   const [staticLoading, setStaticLoading] = useState(true);
   const [dataSource, setDataSource] = useState<"static" | "imported" | "none">("none");
 
   const {
-    ingestion,
-    validation,
-    processedData,
-    loading: importLoading,
-    error: importError,
-    loadFiles,
-    loadFromGitHub,
-    loadFromPaste,
+    ingestion, validation, processedData,
+    loading: importLoading, error: importError,
+    loadFiles, loadFromGitHub, loadFromPaste,
     clearAll: clearImported,
-    exportJsonl,
-    exportMarkdown: exportIngestionMarkdown,
-    exportDashboardJson,
-    exportAll,
   } = useLogIngestion();
 
-  /**
-   * Try to fetch static JSON files (backward compatibility)
-   */
+  // ── fetch static files on mount ──
   const fetchStaticData = useCallback(async () => {
     setStaticLoading(true);
-
     try {
       const [overview, timeline, tasks, developers, report] = await Promise.all([
         fetchJson<Overview>("/data/overview.json"),
@@ -84,7 +68,6 @@ export function useDashboardData(): UseDashboardDataReturn {
         fetchJson<Developer[]>("/data/developers.json"),
         fetchJson<Report>("/data/report.json"),
       ]);
-
       if (overview) {
         setStaticData({
           overview,
@@ -104,100 +87,111 @@ export function useDashboardData(): UseDashboardDataReturn {
     }
   }, []);
 
-  // Try to load static data on mount
-  useEffect(() => {
-    fetchStaticData();
-  }, [fetchStaticData]);
+  useEffect(() => { fetchStaticData(); }, [fetchStaticData]);
 
-  // Update data source when imported data changes
   useEffect(() => {
-    if (processedData) {
-      setDataSource("imported");
-    }
+    if (processedData) setDataSource("imported");
   }, [processedData]);
 
-  /**
-   * Get the active data (either imported or static)
-   */
-  const getActiveData = (): DashboardData => {
-    if (dataSource === "imported" && processedData) {
-      return {
-        overview: processedData.overview,
-        timeline: processedData.timeline,
-        tasks: processedData.tasks,
-        developers: processedData.developers,
-        report: processedData.report,
-      };
-    }
-    return staticData;
-  };
+  // ── active data ──
+  const data: DashboardData =
+    dataSource === "imported" && processedData
+      ? {
+          overview: processedData.overview,
+          timeline: processedData.timeline,
+          tasks: processedData.tasks,
+          developers: processedData.developers,
+          report: processedData.report,
+        }
+      : staticData;
 
-  const data = getActiveData();
   const hasData = data.overview !== null;
   const loading = staticLoading || importLoading;
   const error = importError;
 
-  /**
-   * Clear all imported data and fall back to static if available
-   */
   const clearAll = useCallback(() => {
     clearImported();
     setDataSource(staticData.overview ? "static" : "none");
   }, [clearImported, staticData.overview]);
 
-  /**
-   * Export data in specified format
-   */
+  // ===================================================================
+  //  EXPORT — works for BOTH static and imported data
+  // ===================================================================
+
+  /** Has imported raw JSONL entries? */
+  const hasRawEntries = ingestion.allEntries.length > 0;
+
+  const doExportJsonl = useCallback(() => {
+    if (hasRawEntries) {
+      exportMergedJsonl(ingestion.allEntries);
+    } else {
+      // Static mode: no raw entries — export timeline as JSONL
+      const content = data.timeline.map(e => JSON.stringify(e)).join("\n");
+      downloadAsFile(content, "MERGED_LOG.jsonl", "application/jsonl");
+    }
+  }, [hasRawEntries, ingestion.allEntries, data.timeline]);
+
+  const doExportMarkdown = useCallback(() => {
+    if (hasRawEntries && processedData) {
+      // Imported mode: full markdown with raw JSONL appendix is
+      // handled by exportReportAsMarkdown (which receives rawEntries)
+      exportReportAsMarkdown(
+        processedData.report,
+        processedData.timeline,
+        processedData.tasks,
+        processedData.developers,
+        ingestion.allEntries,
+      );
+    } else if (data.report) {
+      exportReportAsMarkdown(
+        data.report,
+        data.timeline,
+        data.tasks,
+        data.developers,
+        [], // no raw entries in static mode
+      );
+    }
+  }, [hasRawEntries, processedData, ingestion.allEntries, data]);
+
+  const doExportDashboardJson = useCallback(() => {
+    if (!data.overview || !data.report) return;
+    exportDashboardBundle(
+      data.overview, data.timeline, data.tasks, data.developers, data.report,
+    );
+  }, [data]);
+
+  const doExportAll = useCallback(() => {
+    if (hasRawEntries && processedData) {
+      exportFullEvidence(
+        ingestion.files, ingestion.allEntries,
+        processedData.overview, processedData.timeline,
+        processedData.tasks, processedData.developers, processedData.report,
+      );
+    } else {
+      // Static mode: download everything we have sequentially
+      doExportJsonl();
+      setTimeout(() => doExportMarkdown(), 300);
+      setTimeout(() => doExportDashboardJson(), 600);
+    }
+  }, [hasRawEntries, processedData, ingestion, doExportJsonl, doExportMarkdown, doExportDashboardJson]);
+
   const exportData = useCallback((format: ExportFormat) => {
     switch (format) {
-      case "jsonl":
-        exportJsonl();
-        break;
-      case "markdown":
-        exportIngestionMarkdown();
-        break;
-      case "json-bundle":
-        exportDashboardJson();
-        break;
-      case "zip":
-        exportAll();
-        break;
+      case "jsonl": doExportJsonl(); break;
+      case "markdown": doExportMarkdown(); break;
+      case "json-bundle": doExportDashboardJson(); break;
+      case "zip": doExportAll(); break;
     }
-  }, [exportJsonl, exportIngestionMarkdown, exportDashboardJson, exportAll]);
+  }, [doExportJsonl, doExportMarkdown, doExportDashboardJson, doExportAll]);
 
-  /**
-   * Export the current Report as Markdown.
-   * Works for both imported data (via ingestion) and static data.
-   */
-  const exportReportMarkdown = useCallback(() => {
-    // Prefer the ingestion-level exporter if we have raw entries
-    // (it produces a richer markdown with the full timeline table)
-    if (dataSource === "imported" && ingestion.allEntries.length > 0 && processedData) {
-      exportIngestionMarkdown();
-      return;
-    }
-
-    // Fallback: export from dashboard data (static mode or any mode)
-    const report = data.report;
-    if (report) {
-      exportReportAsMarkdown(report, data.timeline, data.tasks, data.developers);
-    }
-  }, [dataSource, ingestion.allEntries, processedData, exportIngestionMarkdown, data.report, data.timeline, data.tasks, data.developers]);
+  // Report page Export MD button
+  const exportReportMarkdown = doExportMarkdown;
 
   return {
-    data,
-    loading,
-    error,
+    data, loading, error,
     refetch: fetchStaticData,
-    hasData,
-    dataSource,
-    ingestion,
-    validation,
-    loadFiles,
-    loadFromGitHub,
-    loadFromPaste,
-    clearAll,
-    exportData,
-    exportReportMarkdown,
+    hasData, dataSource, ingestion, validation,
+    loadFiles, loadFromGitHub, loadFromPaste, clearAll,
+    exportData, exportReportMarkdown,
   };
 }
